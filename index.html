@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Illy Flowers</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #fffafc;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    header {
+      background: #f9dfe8;
+      padding: 20px;
+      text-align: center;
+    }
+    header h1 {
+      margin: 0;
+      color: #c2185b;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 20px auto;
+      padding: 0 15px;
+    }
+    .products {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .product {
+      background: white;
+      border: 2px solid #f9dfe8;
+      border-radius: 10px;
+      padding: 15px;
+      text-align: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+    .product img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 8px;
+    }
+    .product h3 {
+      margin: 10px 0 5px;
+      color: #c2185b;
+    }
+    .product p {
+      font-size: 14px;
+      color: #666;
+    }
+    .cart, .admin-panel {
+      background: white;
+      border: 2px solid #f9dfe8;
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 20px;
+    }
+    button {
+      background: #f8bbd0;
+      border: none;
+      padding: 6px 12px;
+      margin: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      color: #333;
+    }
+    button:hover {
+      background: #f48fb1;
+    }
+    input, select, textarea {
+      padding: 6px;
+      margin: 5px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      width: 100%;
+    }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Illy Flowers</h1>
+  <p>Dari kebun pilihan, bunga segar kami hadir untuk mempercantik harimu dan membawa kebahagiaan yang mekar setiap saat</p>
+</header>
+
+<div class="container">
+  <!-- Login Form -->
+  <div id="loginSection">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username"><br>
+    <input type="password" id="password" placeholder="Password"><br>
+    <button onclick="login()">Login</button>
+  </div>
+
+  <!-- Produk -->
+  <div id="productSection" class="hidden">
+    <h2>Produk</h2>
+    <div class="products" id="productList"></div>
+  </div>
+
+  <!-- Cart -->
+  <div id="cartSection" class="hidden cart">
+    <h2>Keranjang</h2>
+    <div id="cartList"></div>
+    <button onclick="checkout()">Checkout</button>
+  </div>
+
+  <!-- Admin Panel -->
+  <div id="adminPanel" class="hidden admin-panel">
+    <h2>Admin Panel</h2>
+    <h3>Tambah Produk</h3>
+    <input id="newName" placeholder="Nama produk">
+    <input id="newImg" placeholder="URL gambar">
+    <textarea id="newDesc" placeholder="Deskripsi"></textarea>
+    <input id="newPrice" type="number" placeholder="Harga">
+    <select id="newType">
+      <option value="Bunga">Bunga</option>
+      <option value="Buket">Buket</option>
+    </select>
+    <button onclick="addProduct()">Tambah Produk</button>
+  </div>
+</div>
+
+<script>
+let products = [
+  {id:1, name:"Lily", type:"Bunga", price:45000, desc:"Lily elegan dengan aroma lembut.", img:"Bunga-Lily-2.jpg"},
+  {id:2, name:"Mawar", type:"Bunga", price:35000, desc:"Mawar merah, simbol cinta.", img:"mawar.jpg"},
+  {id:3, name:"Peony", type:"Bunga", price:55000, desc:"Peony mewah untuk acara spesial.", img:"peony.jpg"},
+  {id:4, name:"Matahari", type:"Bunga", price:30000, desc:"Bunga matahari ceria penuh semangat.", img:"matahari.jpg"},
+  {id:5, name:"Lavender", type:"Bunga", price:28000, desc:"Lavender dengan aroma menenangkan.", img:"lavender.jpg"},
+  {id:6, name:"Tulip", type:"Bunga", price:32000, desc:"Tulip elegan penuh makna.", img:"tulip.jpg"},
+  {id:7, name:"Romantic Lily Bouquet", type:"Buket", price:125000, desc:"Buket lily romantis dihias pita.", img:"buket lily.jpg"},
+  {id:8, name:"Classic Rose Bouquet", type:"Buket", price:110000, desc:"Buket mawar merah klasik.", img:"buket bunga mawar.jpg"},
+  {id:9, name:"Peony Celebration", type:"Buket", price:145000, desc:"Buket peony untuk perayaan.", img:"buket peony.jpg"},
+  {id:10, name:"Sunny Day Bouquet", type:"Buket", price:98000, desc:"Buket ceria bunga matahari.", img:"buket matahari.jpg"},
+  {id:11, name:"Lavender Calm", type:"Buket", price:90000, desc:"Buket lavender menenangkan.", img:"buket lavender.jpg"},
+  {id:12, name:"Spring Tulip Mix", type:"Buket", price:99000, desc:"Buket tulip warna-warni.", img:"buket tulip.jpg"}
+];
+;
+let cart = {};
+let currentUser = null;
+
+function renderProducts(){
+  let list = document.getElementById("productList");
+  list.innerHTML = "";
+  products.forEach((p,i)=>{
+    list.innerHTML += `
+      <div class="product">
+        <img src="${p.img}" alt="${p.name}">
+        <h3>${p.name}</h3>
+        <p>${p.desc}</p>
+        <p><b>Rp ${p.price}</b></p>
+        <button onclick="addToCart(${p.id})">+</button>
+        <button onclick="removeFromCart(${p.id})">-</button>
+        ${currentUser?.role==="admin" ? `<br>
+          <button onclick="editProduct(${p.id})">Edit</button>
+          <button onclick="deleteProduct(${p.id})">Hapus</button>`:""}
+      </div>
+    `;
+  });
+}
+function renderCart(){
+  let list=document.getElementById("cartList");
+  list.innerHTML="";
+  let total=0;
+  for(let id in cart){
+    let p=products.find(x=>x.id==id);
+    if(p){
+      total+=p.price*cart[id];
+      list.innerHTML+=`<div>${p.name} x${cart[id]} = Rp ${p.price*cart[id]}</div>`;
+    }
+  }
+  list.innerHTML+=`<hr><b>Total: Rp ${total}</b>`;
+}
+function addToCart(id){
+  if(!cart[id]) cart[id]=0;
+  cart[id]++;
+  renderCart();
+}
+function removeFromCart(id){
+  if(cart[id]) cart[id]--;
+  if(cart[id]<=0) delete cart[id];
+  renderCart();
+}
+function checkout(){
+  alert("Pesanan berhasil! Terima kasih, "+currentUser.username);
+  cart={};
+  renderCart();
+}
+function login(){
+  let u=document.getElementById("username").value;
+  let p=document.getElementById("password").value;
+  if(u==="alifa"&&p==="1234"){ currentUser={username:u,role:"user"}; }
+  else if(u==="admin"&&p==="1234"){ currentUser={username:u,role:"admin"}; }
+  else { alert("Login gagal"); return; }
+  document.getElementById("loginSection").classList.add("hidden");
+  document.getElementById("productSection").classList.remove("hidden");
+  document.getElementById("cartSection").classList.remove("hidden");
+  if(currentUser.role==="admin") document.getElementById("adminPanel").classList.remove("hidden");
+  renderProducts();
+  renderCart();
+}
+function addProduct(){
+  let name=document.getElementById("newName").value;
+  let img=document.getElementById("newImg").value;
+  let desc=document.getElementById("newDesc").value;
+  let price=parseInt(document.getElementById("newPrice").value);
+  let type=document.getElementById("newType").value;
+  products.push({id:Date.now(),name,img,desc,price,type});
+  renderProducts();
+}
+function deleteProduct(id){
+  products=products.filter(p=>p.id!=id);
+  renderProducts();
+}
+function editProduct(id){
+  let p=products.find(x=>x.id==id);
+  let newName=prompt("Nama baru:",p.name);
+  let newDesc=prompt("Deskripsi baru:",p.desc);
+  let newPrice=prompt("Harga baru:",p.price);
+  if(newName) p.name=newName;
+  if(newDesc) p.desc=newDesc;
+  if(newPrice) p.price=parseInt(newPrice);
+  renderProducts();
+}
+</script>
+
+</body>
+</html>
